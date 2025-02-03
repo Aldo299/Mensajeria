@@ -1,10 +1,18 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from datetime import datetime
 
 app = Flask(__name__)
 
 # Lista en memoria para almacenar los mensajes.
 messages = []
+
+# Ruta para la página de inicio (menú)
+@app.route('/')
+def home():
+    # Opción 1: Renderiza una plantilla de inicio (por ejemplo, home.html)
+    return render_template('home.html')
+    # Opción 2: Redirige a una de las aplicaciones, por ejemplo, App1
+    # return redirect(url_for('app1'))
 
 # Ruta para la interfaz de App 1 (por ejemplo, una interfaz de estilo claro)
 @app.route('/app1')
