@@ -15,28 +15,43 @@
       background-color: #1e1e1e;
       border: none;
     }
+    /* Se actualiza el encabezado y pie para que el texto tenga mayor contraste */
     .card-header, .card-footer {
-      background-color: #e0e0e0;
+      background-color: #272727;
+      color: #ffffff; /* Texto en blanco para contraste */
     }
     .chat-box {
       max-height: 400px;
       overflow-y: auto;
       padding: 15px;
-      background: #1e1e1e;
+      background: #2c2c2c; /* Fondo ligeramente más claro para el área de mensajes */
       border-radius: 5px;
-      border: 1px solid #333;
+      border: 1px solid #444;
     }
     .message {
       margin-bottom: 15px;
+      padding: 10px;
+      background: #333333; /* Fondo de cada mensaje */
+      border-left: 4px solid #007bff; /* Detalle lateral para resaltar */
+      border-radius: 5px;
+      color: #ffffff; /* Texto en blanco para mayor contraste */
     }
     .timestamp {
       font-size: 0.8rem;
-      color: #9e9e9e;
+      color: #b0b0b0;
+      margin-top: 5px;
     }
     input, textarea {
       background-color: #1e1e1e;
       border: 1px solid #444;
       color: #e0e0e0;
+    }
+    input::placeholder,
+    textarea::placeholder {
+      color: #a0a0a0;
+    }
+    label {
+      color: #c0c0c0;
     }
   </style>
 </head>
