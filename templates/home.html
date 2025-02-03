@@ -4,14 +4,53 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inicio - App de Mensajería</title>
-  <!-- Bootstrap CSS o cualquier otro estilo -->
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Fuente Roboto de Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Estilos personalizados -->
+  <style>
+    body {
+      background-color: #f8f9fa;
+      font-family: 'Roboto', sans-serif;
+      color: #343a40;
+      padding-top: 50px;
+    }
+    .container-custom {
+      max-width: 500px;
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 1.125rem;
+    }
+    .btn-custom {
+      font-size: 1.1rem;
+      padding: 10px 20px;
+      transition: transform 0.3s;
+      margin: 10px 0;
+    }
+    .btn-custom:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
 <body>
-  <h1>Bienvenido a la Aplicación de Mensajería</h1>
-  <p>Elige una de las siguientes opciones:</p>
-  <ul>
-    <li><a href="{{ url_for('app1') }}">Interfaz App 1</a></li>
-    <li><a href="{{ url_for('app2') }}">Interfaz App 2</a></li>
-  </ul>
+  <div class="container container-custom text-center">
+    <h1>Bienvenido a la Aplicación de Mensajería</h1>
+    <p>Elige una de las siguientes opciones:</p>
+    <div class="d-grid gap-3">
+      <a href="{{ url_for('app1') }}" class="btn btn-primary btn-custom">App 1</a>
+      <a href="{{ url_for('app2') }}" class="btn btn-success btn-custom">App 2</a>
+    </div>
+  </div>
+  <!-- Bootstrap Bundle JS (opcional si se usan componentes interactivos) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
