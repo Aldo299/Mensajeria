@@ -22,17 +22,14 @@ registered_users = set()
 # Rutas para las interfaces web
 ########################################
 
-# Página de inicio (menú)
 @app.route('/')
 def home():
     return render_template('home.html')
     
-# Interfaz para App1 (administrador)
 @app.route('/app1')
 def app1():
     return render_template('app1.html')
 
-# Interfaz para App2 (usuario común)
 @app.route('/app2')
 def app2():
     return render_template('app2.html')
@@ -41,7 +38,7 @@ def app2():
 # Endpoints para el registro y la gestión de salas y chats
 ########################################
 
-# Registro de usuario: Se verifica que el nombre no se repita.
+# Registro de usuario: se verifica que el nombre no se repita.
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -78,9 +75,7 @@ def create_room():
     # Verificar que no exista una sala con el mismo nombre.
     if room in chat_rooms:
         return jsonify({'error': 'La sala ya existe.'}), 400
-    # Verificar que el administrador esté registrado.
-    if admin not in registered_users:
-        return jsonify({'error': 'El usuario no está registrado.'}), 400
+    # Se asume que el usuario ya fue registrado previamente.
     chat_rooms[room] = {
         'admin': admin,
         'users': set([admin]),  # Se agrega automáticamente el administrador.
@@ -98,10 +93,7 @@ def join_room():
     user = data['user'].strip()
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
-    # Verificar que el usuario esté registrado.
-    if user not in registered_users:
-        return jsonify({'error': 'El usuario no está registrado.'}), 400
-    # Si el usuario ya está en la sala, retornar mensaje informativo.
+    # Se asume que el usuario ya fue registrado previamente.
     if user in chat_rooms[room]['users']:
         return jsonify({'status': f'El usuario {user} ya está en la sala {room}.'}), 200
     chat_rooms[room]['users'].add(user)
@@ -159,7 +151,6 @@ def remove_user():
     if user == admin:
         return jsonify({'error': 'El administrador no puede removerse a sí mismo.'}), 400
     chat_rooms[room]['users'].remove(user)
-    # Aquí no eliminamos al usuario de registered_users, ya que sigue registrado.
     return jsonify({'status': f'Usuario {user} removido de la sala {room}.'}), 200
 
 ########################################
