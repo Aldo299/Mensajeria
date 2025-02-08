@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>App 2 - Mensajería</title>
+  <title>App 2 - Chats Grupales</title>
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Fuente Roboto de Google Fonts -->
@@ -14,7 +14,7 @@
       color: #e0e0e0;
       font-family: 'Roboto', sans-serif;
     }
-    h1 {
+    h1, h2 {
       font-weight: 500;
     }
     .card {
@@ -23,6 +23,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
       overflow: hidden;
+      margin-bottom: 20px;
     }
     .card-header {
       background-color: #272727;
@@ -36,7 +37,7 @@
       border-top: 1px solid #3a3a3a;
     }
     .chat-box {
-      max-height: 400px;
+      max-height: 300px;
       overflow-y: auto;
       padding: 15px;
       background: #2c2c2c;
@@ -50,7 +51,7 @@
       border-left: 4px solid #0d6efd;
       border-radius: 8px;
       transition: background-color 0.3s;
-      color: #ffffff; /* Texto blanco para los mensajes */
+      color: #ffffff;
     }
     .message:hover {
       background-color: #3a3a3a;
@@ -60,11 +61,10 @@
       color: #b0b0b0;
       margin-top: 5px;
     }
-    /* Estilos para inputs y textarea */
     input, textarea {
       background-color: #1e1e1e;
       border: 1px solid #444;
-      color: #ffffff; /* Texto en blanco */
+      color: #ffffff;
       border-radius: 6px;
       transition: box-shadow 0.3s;
     }
@@ -72,121 +72,178 @@
     textarea::placeholder {
       color: #a0a0a0;
     }
-    /* Estilos para etiquetas (labels) */
     label {
-      color: #ffffff; /* Texto en blanco */
+      color: #ffffff;
     }
   </style>
 </head>
 <body>
   <div class="container py-4">
-    <h1 class="mb-4 text-center">App 2 - Mensajería</h1>
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <!-- Formulario para enviar mensaje -->
-        <div class="card mb-4">
-          <div class="card-body">
-            <form id="messageForm">
-              <div class="mb-3">
-                <label for="sender" class="form-label">Emisor</label>
-                <input type="text" class="form-control" id="sender" placeholder="Tu nombre">
-              </div>
-              <div class="mb-3">
-                <label for="recipient" class="form-label">Receptor</label>
-                <input type="text" class="form-control" id="recipient" placeholder="Nombre del receptor">
-              </div>
-              <div class="mb-3">
-                <label for="message" class="form-label">Mensaje</label>
-                <textarea class="form-control" id="message" rows="3" placeholder="Escribe tu mensaje"></textarea>
-              </div>
-              <button type="submit" class="btn btn-success w-100">Enviar Mensaje</button>
-            </form>
+    <h1 class="mb-4 text-center">App 2 - Chats Grupales</h1>
+    
+    <!-- Formulario para ingresar el nombre de usuario -->
+    <div class="card" id="usernameCard">
+      <div class="card-body">
+        <form id="userForm" class="row g-3">
+          <div class="col-md-8">
+            <input type="text" class="form-control" id="username" placeholder="Ingresa tu nombre de usuario" required>
           </div>
-        </div>
-
-        <!-- Área de mensajes -->
-        <div class="card">
-          <div class="card-header">Mensajes Recibidos</div>
-          <div id="chatBox" class="card-body chat-box"></div>
-          <div class="card-footer text-center">
-            <!-- Botón con el texto "Borrar Mensajes" -->
-            <button id="refreshBtn" class="btn btn-secondary">Borrar Mensajes</button>
+          <div class="col-md-4">
+            <button type="submit" class="btn btn-success w-100">Guardar Nombre</button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
+    
+    <!-- Sección para listar salas disponibles (se muestra tras ingresar el nombre) -->
+    <div class="card" id="roomListCard" style="display: none;">
+      <div class="card-header">Salas Disponibles</div>
+      <div class="card-body" id="roomList">
+        <p class="text-center">Cargando salas...</p>
+      </div>
+    </div>
+    
+    <!-- Sección de chat de sala (se muestra tras unirse a una sala) -->
+    <div class="card" id="chatCard" style="display: none;">
+      <div class="card-header">Chat en Sala: <span id="activeRoomName"></span></div>
+      <div class="card-body chat-box" id="chatBox">
+        <p class="text-center">No hay mensajes.</p>
+      </div>
+      <div class="card-footer">
+        <form id="sendMessageForm" class="d-flex">
+          <input type="text" class="form-control me-2" id="chatMessage" placeholder="Escribe tu mensaje" required>
+          <button type="submit" class="btn btn-success">Enviar</button>
+        </form>
+      </div>
+    </div>
+    
   </div>
-
+  
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Función para formatear la fecha.
-    function formatTimestamp(timestamp) {
-      const date = new Date(timestamp);
-      return date.toLocaleString();
-    }
-
-    // Actualizar el chat (funcionalidad se conserva)
-    async function updateChat() {
-      try {
-        const response = await fetch('/messages');
-        const data = await response.json();
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = '';
-        
-        if (data.length === 0) {
-          chatBox.innerHTML = '<p class="text-center">No hay mensajes.</p>';
-          return;
-        }
-
-        data.forEach(msg => {
-          const msgDiv = document.createElement('div');
-          msgDiv.classList.add('message');
-          msgDiv.innerHTML = `
-            <strong>${msg.sender}</strong> ➜ <strong>${msg.recipient}</strong>: ${msg.message}
-            <div class="timestamp">${formatTimestamp(msg.timestamp)}</div>
-          `;
-          chatBox.appendChild(msgDiv);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } catch (error) {
-        console.error('Error al obtener mensajes:', error);
-      }
-    }
-
-    // Enviar mensaje
-    document.getElementById('messageForm').addEventListener('submit', async function(e) {
+    let username = '';
+    let activeRoom = '';
+    
+    // Guardar el nombre de usuario
+    document.getElementById('userForm').addEventListener('submit', function(e) {
       e.preventDefault();
-      const sender = document.getElementById('sender').value.trim();
-      const recipient = document.getElementById('recipient').value.trim();
-      const message = document.getElementById('message').value.trim();
-
-      if (!sender || !recipient || !message) {
-        alert("Por favor, completa todos los campos.");
+      const usernameInput = document.getElementById('username');
+      if(usernameInput.value.trim() === '') {
+        alert('Por favor, ingresa tu nombre.');
         return;
       }
-
+      username = usernameInput.value.trim();
+      alert('Nombre guardado: ' + username);
+      // Ocultar el formulario de nombre y mostrar la lista de salas
+      document.getElementById('usernameCard').style.display = 'none';
+      document.getElementById('roomListCard').style.display = 'block';
+      loadRooms();
+    });
+    
+    // Cargar las salas disponibles
+    async function loadRooms() {
+      try {
+        const response = await fetch('/rooms');
+        const rooms = await response.json();
+        const roomListDiv = document.getElementById('roomList');
+        roomListDiv.innerHTML = '';
+        if (rooms.length === 0) {
+          roomListDiv.innerHTML = '<p class="text-center">No hay salas creadas.</p>';
+          return;
+        }
+        rooms.forEach(room => {
+          const roomDiv = document.createElement('div');
+          roomDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-2');
+          roomDiv.innerHTML = `
+            <span><strong>${room.room}</strong> (Usuarios: ${room.user_count})</span>
+            <button class="btn btn-sm btn-outline-success" onclick="joinRoom('${room.room}')">Unirse</button>
+          `;
+          roomListDiv.appendChild(roomDiv);
+        });
+      } catch (error) {
+        console.error('Error al cargar salas:', error);
+      }
+    }
+    
+    // Función para unirse a una sala
+    async function joinRoom(roomName) {
+      activeRoom = roomName;
+      try {
+        const response = await fetch('/rooms/join', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ room: roomName, user: username })
+        });
+        const result = await response.json();
+        if (response.ok) {
+          alert('Te has unido a la sala: ' + roomName);
+          document.getElementById('activeRoomName').textContent = roomName;
+          // Ocultar la lista de salas y mostrar el chat
+          document.getElementById('roomListCard').style.display = 'none';
+          document.getElementById('chatCard').style.display = 'block';
+          loadMessages();
+        } else {
+          alert('Error: ' + result.error);
+        }
+      } catch (error) {
+        console.error('Error al unirse a la sala:', error);
+      }
+    }
+    
+    // Enviar mensaje en la sala activa
+    document.getElementById('sendMessageForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const message = document.getElementById('chatMessage').value.trim();
+      if (!message) return;
       try {
         const response = await fetch('/send', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ sender, recipient, message })
+          body: JSON.stringify({ room: activeRoom, sender: username, message: message })
         });
         const result = await response.json();
         if (response.ok) {
-          document.getElementById('message').value = '';
-          updateChat();
+          document.getElementById('chatMessage').value = '';
+          loadMessages();
         } else {
-          alert("Error: " + (result.error || "No se pudo enviar el mensaje."));
+          alert('Error: ' + result.error);
         }
       } catch (error) {
         console.error('Error al enviar mensaje:', error);
       }
     });
-
-    document.getElementById('refreshBtn').addEventListener('click', updateChat);
-    setInterval(updateChat, 5000);
-    updateChat();
+    
+    // Cargar mensajes de la sala activa
+    async function loadMessages() {
+      try {
+        const response = await fetch('/messages?room=' + encodeURIComponent(activeRoom));
+        const messages = await response.json();
+        const chatBox = document.getElementById('chatBox');
+        chatBox.innerHTML = '';
+        if (messages.length === 0) {
+          chatBox.innerHTML = '<p class="text-center">No hay mensajes.</p>';
+          return;
+        }
+        messages.forEach(msg => {
+          const msgDiv = document.createElement('div');
+          msgDiv.classList.add('message');
+          msgDiv.innerHTML = `
+            <strong>${msg.sender}</strong>: ${msg.message}
+            <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+          `;
+          chatBox.appendChild(msgDiv);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (error) {
+        console.error('Error al cargar mensajes:', error);
+      }
+    }
+    
+    // Actualizar mensajes cada 5 segundos si se ha unido a una sala.
+    setInterval(() => {
+      if (activeRoom) loadMessages();
+    }, 5000);
   </script>
 </body>
 </html>
