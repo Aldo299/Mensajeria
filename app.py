@@ -38,7 +38,7 @@ def app2():
 # Endpoints para el registro y la gestión de salas y chats
 ########################################
 
-# Registro de usuario: se verifica que el nombre no se repita.
+# Registro de usuario: se verifica que el nombre no se repita (se hace una única vez al escoger el nombre).
 @app.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -51,6 +51,18 @@ def register():
         return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
     registered_users.add(username)
     return jsonify({'status': 'Usuario registrado', 'username': username}), 200
+
+# Nuevo endpoint para que un administrador se una automáticamente a todas las salas existentes.
+@app.route('/admin/join_all', methods=['POST'])
+def admin_join_all():
+    data = request.get_json()
+    if not data or 'admin' not in data:
+        return jsonify({'error': 'Se requiere el parámetro admin.'}), 400
+    admin = data['admin'].strip()
+    # Se asume que el administrador ya está registrado.
+    for room in chat_rooms:
+        chat_rooms[room]['users'].add(admin)
+    return jsonify({'status': f'Administrador {admin} se ha unido a todas las salas.'}), 200
 
 # Listar todas las salas disponibles.
 @app.route('/rooms', methods=['GET'])
@@ -75,10 +87,10 @@ def create_room():
     # Verificar que no exista una sala con el mismo nombre.
     if room in chat_rooms:
         return jsonify({'error': 'La sala ya existe.'}), 400
-    # Se asume que el usuario ya fue registrado previamente.
+    # Se asume que el administrador ya fue registrado.
     chat_rooms[room] = {
         'admin': admin,
-        'users': set([admin]),  # Se agrega automáticamente el administrador.
+        'users': set([admin]),  # Se agrega automáticamente el administrador a la sala.
         'messages': []
     }
     return jsonify({'status': 'Sala creada', 'room': room}), 200
@@ -93,7 +105,7 @@ def join_room():
     user = data['user'].strip()
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
-    # Se asume que el usuario ya fue registrado previamente.
+    # Se asume que el usuario ya fue registrado.
     if user in chat_rooms[room]['users']:
         return jsonify({'status': f'El usuario {user} ya está en la sala {room}.'}), 200
     chat_rooms[room]['users'].add(user)
