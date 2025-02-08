@@ -11,11 +11,12 @@
   <style>
     body {
       background-color: #121212;
-      color: #e0e0e0;
+      color: #ffffff;  /* Texto en blanco */
       font-family: 'Roboto', sans-serif;
     }
     h1, h2 {
       font-weight: 500;
+      color: #ffffff;
     }
     .card {
       background-color: #1e1e1e;
@@ -31,6 +32,9 @@
       font-size: 1.125rem;
       font-weight: 500;
       border-bottom: 1px solid #3a3a3a;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
     .card-footer {
       background-color: #272727;
@@ -75,6 +79,10 @@
     label {
       color: #ffffff;
     }
+    /* Forzar que el nombre de la sala se muestre en blanco */
+    #activeRoomName {
+      color: #ffffff;
+    }
   </style>
 </head>
 <body>
@@ -105,7 +113,11 @@
     
     <!-- Sección de chat de sala (se muestra tras unirse a una sala) -->
     <div class="card" id="chatCard" style="display: none;">
-      <div class="card-header">Chat en Sala: <span id="activeRoomName"></span></div>
+      <div class="card-header">
+        <span>Chat en Sala: <span id="activeRoomName"></span></span>
+        <!-- Botón para cambiar de sala -->
+        <button class="btn btn-sm btn-outline-light" onclick="changeRoom()">Cambiar Sala</button>
+      </div>
       <div class="card-body chat-box" id="chatBox">
         <p class="text-center">No hay mensajes.</p>
       </div>
@@ -129,7 +141,7 @@
     document.getElementById('userForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const usernameInput = document.getElementById('username');
-      if(usernameInput.value.trim() === '') {
+      if (usernameInput.value.trim() === '') {
         alert('Por favor, ingresa tu nombre.');
         return;
       }
@@ -189,6 +201,15 @@
       } catch (error) {
         console.error('Error al unirse a la sala:', error);
       }
+    }
+    
+    // Función para cambiar de sala (mostrar la lista de salas nuevamente)
+    function changeRoom() {
+      activeRoom = '';
+      // Ocultar el chat y mostrar la lista de salas
+      document.getElementById('chatCard').style.display = 'none';
+      document.getElementById('roomListCard').style.display = 'block';
+      loadRooms();
     }
     
     // Enviar mensaje en la sala activa
