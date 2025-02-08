@@ -15,8 +15,8 @@ app = Flask(__name__)
 # }
 chat_rooms = {}
 
-# Conjunto global para almacenar los nombres de usuario activos.
-active_users = set()
+# Conjunto global para almacenar los nombres de usuario registrados.
+registered_users = set()
 
 ########################################
 # Rutas para las interfaces web
@@ -38,8 +38,22 @@ def app2():
     return render_template('app2.html')
 
 ########################################
-# Endpoints para la gestión de salas y chats
+# Endpoints para el registro y la gestión de salas y chats
 ########################################
+
+# Registro de usuario: Se verifica que el nombre no se repita.
+@app.route('/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    if not data or 'username' not in data:
+        return jsonify({'error': 'Se requiere el parámetro username.'}), 400
+    username = data['username'].strip()
+    if username == "":
+        return jsonify({'error': 'El nombre de usuario no puede estar vacío.'}), 400
+    if username in registered_users:
+        return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
+    registered_users.add(username)
+    return jsonify({'status': 'Usuario registrado', 'username': username}), 200
 
 # Listar todas las salas disponibles.
 @app.route('/rooms', methods=['GET'])
@@ -59,40 +73,37 @@ def create_room():
     data = request.get_json()
     if not data or 'room' not in data or 'admin' not in data:
         return jsonify({'error': 'Formato inválido. Se requieren: room, admin'}), 400
-    room = data['room']
-    admin = data['admin']
+    room = data['room'].strip()
+    admin = data['admin'].strip()
+    # Verificar que no exista una sala con el mismo nombre.
     if room in chat_rooms:
         return jsonify({'error': 'La sala ya existe.'}), 400
-    # Verificar que el nombre del administrador no esté ya en uso
-    if admin in active_users:
-        return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
-    # Agregar el nombre del administrador a los usuarios activos y crear la sala
-    active_users.add(admin)
+    # Verificar que el administrador esté registrado.
+    if admin not in registered_users:
+        return jsonify({'error': 'El usuario no está registrado.'}), 400
     chat_rooms[room] = {
         'admin': admin,
-        'users': set([admin]),  # El admin se agrega automáticamente
+        'users': set([admin]),  # Se agrega automáticamente el administrador.
         'messages': []
     }
     return jsonify({'status': 'Sala creada', 'room': room}), 200
 
-# Unirse a una sala (usado tanto por admin como por usuarios)
+# Unirse a una sala (usado tanto por administradores como por usuarios)
 @app.route('/rooms/join', methods=['POST'])
 def join_room():
     data = request.get_json()
     if not data or 'room' not in data or 'user' not in data:
         return jsonify({'error': 'Formato inválido. Se requieren: room, user'}), 400
-    room = data['room']
-    user = data['user']
+    room = data['room'].strip()
+    user = data['user'].strip()
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
-    # Si el usuario ya está en la sala, se informa
+    # Verificar que el usuario esté registrado.
+    if user not in registered_users:
+        return jsonify({'error': 'El usuario no está registrado.'}), 400
+    # Si el usuario ya está en la sala, retornar mensaje informativo.
     if user in chat_rooms[room]['users']:
         return jsonify({'status': f'El usuario {user} ya está en la sala {room}.'}), 200
-    # Si el usuario ya está activo en otra sala, se rechaza la solicitud
-    if user in active_users:
-        return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
-    # Agregar el usuario a la sala y al conjunto global
-    active_users.add(user)
     chat_rooms[room]['users'].add(user)
     return jsonify({'status': f'Usuario {user} se unió a la sala {room}.'}), 200
 
@@ -102,8 +113,8 @@ def send_message():
     data = request.get_json()
     if not data or 'room' not in data or 'sender' not in data or 'message' not in data:
         return jsonify({'error': 'Formato inválido. Se requieren: room, sender, message.'}), 400
-    room = data['room']
-    sender = data['sender']
+    room = data['room'].strip()
+    sender = data['sender'].strip()
     message_text = data['message']
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
@@ -125,6 +136,7 @@ def get_messages():
     room = request.args.get('room')
     if not room:
         return jsonify({'error': 'Se requiere el parámetro room.'}), 400
+    room = room.strip()
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
     return jsonify(chat_rooms[room]['messages']), 200
@@ -135,9 +147,9 @@ def remove_user():
     data = request.get_json()
     if not data or 'room' not in data or 'admin' not in data or 'user' not in data:
         return jsonify({'error': 'Formato inválido. Se requieren: room, admin, user.'}), 400
-    room = data['room']
-    admin = data['admin']
-    user = data['user']
+    room = data['room'].strip()
+    admin = data['admin'].strip()
+    user = data['user'].strip()
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
     if chat_rooms[room]['admin'] != admin:
@@ -147,8 +159,7 @@ def remove_user():
     if user == admin:
         return jsonify({'error': 'El administrador no puede removerse a sí mismo.'}), 400
     chat_rooms[room]['users'].remove(user)
-    # Dado que se permite que un usuario esté en una sola sala, lo removemos del conjunto global
-    active_users.discard(user)
+    # Aquí no eliminamos al usuario de registered_users, ya que sigue registrado.
     return jsonify({'status': f'Usuario {user} removido de la sala {room}.'}), 200
 
 ########################################
