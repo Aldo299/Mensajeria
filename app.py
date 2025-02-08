@@ -15,6 +15,9 @@ app = Flask(__name__)
 # }
 chat_rooms = {}
 
+# Conjunto global para almacenar los nombres de usuario activos.
+active_users = set()
+
 ########################################
 # Rutas para las interfaces web
 ########################################
@@ -60,6 +63,11 @@ def create_room():
     admin = data['admin']
     if room in chat_rooms:
         return jsonify({'error': 'La sala ya existe.'}), 400
+    # Verificar que el nombre del administrador no esté ya en uso
+    if admin in active_users:
+        return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
+    # Agregar el nombre del administrador a los usuarios activos y crear la sala
+    active_users.add(admin)
     chat_rooms[room] = {
         'admin': admin,
         'users': set([admin]),  # El admin se agrega automáticamente
@@ -77,6 +85,14 @@ def join_room():
     user = data['user']
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
+    # Si el usuario ya está en la sala, se informa
+    if user in chat_rooms[room]['users']:
+        return jsonify({'status': f'El usuario {user} ya está en la sala {room}.'}), 200
+    # Si el usuario ya está activo en otra sala, se rechaza la solicitud
+    if user in active_users:
+        return jsonify({'error': 'El nombre de usuario ya está en uso.'}), 400
+    # Agregar el usuario a la sala y al conjunto global
+    active_users.add(user)
     chat_rooms[room]['users'].add(user)
     return jsonify({'status': f'Usuario {user} se unió a la sala {room}.'}), 200
 
@@ -91,7 +107,7 @@ def send_message():
     message_text = data['message']
     if room not in chat_rooms:
         return jsonify({'error': 'La sala no existe.'}), 404
-    # Verifica que el usuario se haya unido a la sala.
+    # Verificar que el usuario se haya unido a la sala.
     if sender not in chat_rooms[room]['users']:
         return jsonify({'error': 'El usuario no se ha unido a esta sala.'}), 403
     new_message = {
@@ -131,6 +147,8 @@ def remove_user():
     if user == admin:
         return jsonify({'error': 'El administrador no puede removerse a sí mismo.'}), 400
     chat_rooms[room]['users'].remove(user)
+    # Dado que se permite que un usuario esté en una sola sala, lo removemos del conjunto global
+    active_users.discard(user)
     return jsonify({'status': f'Usuario {user} removido de la sala {room}.'}), 200
 
 ########################################
