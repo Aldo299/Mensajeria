@@ -10,46 +10,68 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <!-- Estilos personalizados -->
   <style>
+    /* Estilos para el cuerpo de la página */
     body {
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #0d6efd, #198754); /* Degradado azul-verde */
       font-family: 'Roboto', sans-serif;
-      color: #343a40;
-      padding-top: 50px;
+      color: #ffffff; /* Texto en blanco para contraste */
+      margin: 0; /* Elimina el margen predeterminado del body */
+      padding: 0; /* Elimina el padding predeterminado del body */
+      min-height: 100vh; /* Asegura que el body ocupe toda la altura de la pantalla */
+      display: flex;
+      align-items: center; /* Centra el contenido verticalmente */
+      justify-content: center; /* Centra el contenido horizontalmente */
     }
+
+    /* Estilos para el contenedor principal */
     .container-custom {
       max-width: 500px;
-      background-color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.95); /* Fondo menos transparente */
       padding: 30px;
       border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra más suave */
+      border: none; /* Asegura que no haya bordes */
     }
+
+    /* Estilos para el título y el párrafo */
     h1 {
       font-weight: 500;
       margin-bottom: 20px;
+      color: #343a40; /* Texto oscuro para contraste */
     }
+
     p {
       font-size: 1.125rem;
+      color: #343a40; /* Texto oscuro para contraste */
+      margin-bottom: 0; /* Elimina el margen inferior del párrafo */
     }
+
+    /* Estilos para los botones */
     .btn-custom {
       font-size: 1.1rem;
       padding: 10px 20px;
       transition: transform 0.3s;
       margin: 10px 0;
     }
+
     .btn-custom:hover {
-      transform: scale(1.05);
+      transform: scale(1.05); /* Efecto de escala al pasar el mouse */
     }
   </style>
 </head>
 <body>
+  <!-- Contenedor principal -->
   <div class="container container-custom text-center">
     <h1>Bienvenido a la Aplicación de Mensajería</h1>
     <p>Elige una de las siguientes opciones:</p>
     <div class="d-grid gap-3">
+      <!-- Botón para App 1 (Administrador) -->
       <a href="{{ url_for('app1') }}" class="btn btn-primary btn-custom">App 1 Administrador</a>
+      <!-- Botón para App 2 (Usuario) -->
       <a href="{{ url_for('app2') }}" class="btn btn-success btn-custom">App 2 Usuario</a>
     </div>
   </div>
+
   <!-- Bootstrap Bundle JS (opcional si se usan componentes interactivos) -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
