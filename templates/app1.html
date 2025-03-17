@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,51 +11,125 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
-      background-color: #f1f3f5;
+      background-color: #e3e7ed;
       font-family: 'Roboto', sans-serif;
+      color: #2c3e50;
     }
-    h1, h2 {
-      font-weight: 500;
+
+    h1,
+    h2 {
+      font-weight: 600;
+      color: #0d6efd;
     }
+
     .card {
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
     }
-    .card-header, .card-footer {
-      background-color: #ffffff;
+
+    .card-header {
+      background: linear-gradient(135deg, #0d6efd 0%, #0044cc 100%);
+      color: white;
+      font-weight: 500;
+      text-align: center;
+      border-radius: 15px 15px 0 0;
     }
+
+    .card-footer {
+      background: #f1f3f5;
+      border-radius: 0 0 15px 15px;
+    }
+
     .chat-box {
-      max-height: 300px;
+      max-height: 350px;
       overflow-y: auto;
-      border: 1px solid #ced4da;
       padding: 15px;
-      background: #fff;
-      border-radius: 8px;
+      background: #ffffff;
+      border-radius: 10px;
+      border: 1px solid #ced4da;
     }
+
     .message {
-      margin-bottom: 15px;
-      padding: 10px 15px;
-      background-color: #e9ecef;
-      border-left: 4px solid #0d6efd;
-      border-radius: 8px;
-      transition: background-color 0.3s;
+      margin-bottom: 12px;
+      padding: 12px 16px;
+      background-color: #f8f9fa;
+      border-left: 5px solid #0d6efd;
+      border-radius: 10px;
+      transition: all 0.3s ease-in-out;
     }
+
     .message:hover {
-      background-color: #dee2e6;
+      background-color: #e2e6ea;
+      transform: scale(1.02);
     }
+
     .timestamp {
-      font-size: 0.8rem;
-      color: #6c757d;
-      margin-top: 5px;
+      font-size: 0.85rem;
+      color: #7b8a8b;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .btn {
+      font-weight: 500;
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background: #0d6efd;
+      border: none;
+      box-shadow: 0 3px 6px rgba(13, 110, 253, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: #0b5ed7;
+      box-shadow: 0 5px 10px rgba(13, 110, 253, 0.4);
+    }
+
+    .btn-success {
+      background: #198754;
+      border: none;
+      box-shadow: 0 3px 6px rgba(25, 135, 84, 0.3);
+    }
+
+    .btn-success:hover {
+      background: #157347;
+      box-shadow: 0 5px 10px rgba(25, 135, 84, 0.4);
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      border: none;
+      box-shadow: 0 3px 6px rgba(220, 53, 69, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: #bb2d3b;
+      box-shadow: 0 5px 10px rgba(220, 53, 69, 0.4);
+    }
+
+    .input-group input,
+    .form-control {
+      border-radius: 10px;
+      border: 1px solid #ced4da;
+      padding: 10px;
+    }
+
+    .input-group input:focus,
+    .form-control:focus {
+      border-color: #0d6efd;
+      box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
     }
   </style>
 </head>
+
 <body>
   <div class="container py-4">
     <h1 class="mb-4 text-center">App 1 - Administrador de Chats Grupales</h1>
-    
+
     <!-- Sección para ingresar el nombre de administrador -->
     <div class="card mb-4">
       <div class="card-body">
@@ -68,7 +143,7 @@
         </form>
       </div>
     </div>
-    
+
     <!-- Sección para crear una nueva sala -->
     <div class="card mb-4" id="createRoomCard" style="display: none;">
       <div class="card-header">Crear Nueva Sala</div>
@@ -81,7 +156,7 @@
         </form>
       </div>
     </div>
-    
+
     <!-- Sección para listar salas existentes -->
     <div class="card mb-4" id="roomListCard" style="display: none;">
       <div class="card-header">Salas Existentes</div>
@@ -90,7 +165,7 @@
         <p class="text-center">Cargando salas...</p>
       </div>
     </div>
-    
+
     <!-- Sección de chat de sala -->
     <div class="card mb-4" id="chatCard" style="display: none;">
       <div class="card-header">Chat: <span id="activeRoomName"></span></div>
@@ -105,14 +180,15 @@
         </form>
       </div>
     </div>
-    
+
     <!-- Sección para remover usuario de una sala -->
     <div class="card mb-4" id="removeUserCard" style="display: none;">
       <div class="card-header">Remover Usuario de la Sala <span id="activeRoomForRemoval"></span></div>
       <div class="card-body">
         <form id="removeUserForm" class="row g-3">
           <div class="col-md-8">
-            <input type="text" class="form-control" id="removeUserName" placeholder="Nombre del usuario a remover" required>
+            <input type="text" class="form-control" id="removeUserName" placeholder="Nombre del usuario a remover"
+              required>
           </div>
           <div class="col-md-4">
             <button type="submit" class="btn btn-danger w-100">Remover Usuario</button>
@@ -120,20 +196,20 @@
         </form>
       </div>
     </div>
-    
+
   </div>
-  
+
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     let adminName = '';
     let activeRoom = '';
-    
+
     // Guardar el nombre de administrador
-    document.getElementById('adminForm').addEventListener('submit', function(e) {
+    document.getElementById('adminForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const nameInput = document.getElementById('adminName');
-      if(nameInput.value.trim() === '') {
+      if (nameInput.value.trim() === '') {
         alert('Por favor, ingresa tu nombre.');
         return;
       }
@@ -144,20 +220,20 @@
       document.getElementById('roomListCard').style.display = 'block';
       loadRooms();
     });
-    
+
     // Crear una nueva sala
-    document.getElementById('createRoomForm').addEventListener('submit', async function(e) {
+    document.getElementById('createRoomForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const roomName = document.getElementById('roomName').value.trim();
-      if(!roomName) return;
+      if (!roomName) return;
       try {
         const response = await fetch('/rooms', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room: roomName, admin: adminName })
         });
         const result = await response.json();
-        if(response.ok) {
+        if (response.ok) {
           alert('Sala creada: ' + roomName);
           document.getElementById('roomName').value = '';
           loadRooms();
@@ -168,7 +244,7 @@
         console.error('Error al crear sala:', error);
       }
     });
-    
+
     // Cargar las salas existentes
     async function loadRooms() {
       try {
@@ -176,7 +252,7 @@
         const rooms = await response.json();
         const roomListDiv = document.getElementById('roomList');
         roomListDiv.innerHTML = '';
-        if(rooms.length === 0) {
+        if (rooms.length === 0) {
           roomListDiv.innerHTML = '<p class="text-center">No hay salas creadas.</p>';
           return;
         }
@@ -193,7 +269,7 @@
         console.error('Error al cargar salas:', error);
       }
     }
-    
+
     // Seleccionar una sala para chatear y remover usuarios
     function selectRoom(roomName) {
       activeRoom = roomName;
@@ -203,20 +279,20 @@
       document.getElementById('removeUserCard').style.display = 'block';
       loadMessages();
     }
-    
+
     // Enviar mensaje a la sala activa
-    document.getElementById('sendMessageForm').addEventListener('submit', async function(e) {
+    document.getElementById('sendMessageForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const message = document.getElementById('chatMessage').value.trim();
-      if(!message) return;
+      if (!message) return;
       try {
         const response = await fetch('/send', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room: activeRoom, sender: adminName, message: message })
         });
         const result = await response.json();
-        if(response.ok) {
+        if (response.ok) {
           document.getElementById('chatMessage').value = '';
           loadMessages();
         } else {
@@ -226,7 +302,7 @@
         console.error('Error al enviar mensaje:', error);
       }
     });
-    
+
     // Cargar mensajes de la sala activa
     async function loadMessages() {
       try {
@@ -234,7 +310,7 @@
         const messages = await response.json();
         const chatBox = document.getElementById('chatBox');
         chatBox.innerHTML = '';
-        if(messages.length === 0) {
+        if (messages.length === 0) {
           chatBox.innerHTML = '<p class="text-center">No hay mensajes.</p>';
           return;
         }
@@ -252,20 +328,20 @@
         console.error('Error al cargar mensajes:', error);
       }
     }
-    
+
     // Remover usuario de la sala activa
-    document.getElementById('removeUserForm').addEventListener('submit', async function(e) {
+    document.getElementById('removeUserForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const userToRemove = document.getElementById('removeUserName').value.trim();
-      if(!userToRemove) return;
+      if (!userToRemove) return;
       try {
         const response = await fetch('/rooms/remove_user', {
           method: 'POST',
-          headers: {'Content-Type': 'application/json'},
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ room: activeRoom, admin: adminName, user: userToRemove })
         });
         const result = await response.json();
-        if(response.ok) {
+        if (response.ok) {
           alert('Usuario removido: ' + userToRemove);
           document.getElementById('removeUserName').value = '';
           loadRooms(); // Actualizar la lista de salas
@@ -276,11 +352,12 @@
         console.error('Error al remover usuario:', error);
       }
     });
-    
+
     // Actualizar mensajes cada 5 segundos si se ha seleccionado una sala.
     setInterval(() => {
-      if(activeRoom) loadMessages();
+      if (activeRoom) loadMessages();
     }, 5000);
   </script>
 </body>
+
 </html>
