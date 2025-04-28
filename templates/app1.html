@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
   <style>
     body {
-      background: linear-gradient(to right, #0d6efd, #ffffff); /* Verde oscuro a blanco */
+      background: linear-gradient(to right, #0d6efd, #ffffff);
       font-family: 'Roboto', sans-serif;
       color: #2c3e50;
     }
@@ -126,13 +126,16 @@
       box-shadow: 0 0 8px rgba(13, 110, 253, 0.3);
     }
   </style>
+  <!-- Cliente de Socket.IO -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"
+    integrity="sha384-YOUR_INTEGRITY_HASH" crossorigin="anonymous"></script>
 </head>
 
 <body>
   <div class="container py-4">
     <h1 class="mb-4 text-center">APP 1 - ADMINISTRADOR DE CHAT GRUPALES</h1>
 
-    <!-- Sección para ingresar el nombre de administrador -->
+    <!-- Ingresar nombre de admin -->
     <div class="card mb-4">
       <div class="card-body">
         <form id="adminForm" class="row g-3">
@@ -146,7 +149,7 @@
       </div>
     </div>
 
-    <!-- Sección para crear una nueva sala -->
+    <!-- Crear sala -->
     <div class="card mb-4" id="createRoomCard" style="display: none;">
       <div class="card-header">Crear Nueva Sala</div>
       <div class="card-body">
@@ -159,20 +162,18 @@
       </div>
     </div>
 
-    <!-- Sección para listar salas existentes -->
+    <!-- Listar salas -->
     <div class="card mb-4" id="roomListCard" style="display: none;">
       <div class="card-header">Salas Existentes</div>
       <div class="card-body" id="roomList">
-        <!-- Aquí se insertarán las salas -->
         <p class="text-center">Cargando salas...</p>
       </div>
     </div>
 
-    <!-- Sección de chat de sala -->
+    <!-- Chat -->
     <div class="card mb-4" id="chatCard" style="display: none;">
       <div class="card-header">Chat: <span id="activeRoomName"></span></div>
       <div class="card-body chat-box" id="chatBox">
-        <!-- Mensajes de la sala -->
         <p class="text-center">No hay mensajes.</p>
       </div>
       <div class="card-footer">
@@ -183,14 +184,14 @@
       </div>
     </div>
 
-    <!-- Sección para remover usuario de una sala -->
+    <!-- Remover usuario -->
     <div class="card mb-4" id="removeUserCard" style="display: none;">
       <div class="card-header">Remover Usuario de la Sala <span id="activeRoomForRemoval"></span></div>
       <div class="card-body">
         <form id="removeUserForm" class="row g-3">
           <div class="col-md-8">
-            <input type="text" class="form-control" id="removeUserName" placeholder="Nombre del usuario a remover"
-              required>
+            <input type="text" class="form-control" id="removeUserName"
+              placeholder="Nombre del usuario a remover" required>
           </div>
           <div class="col-md-4">
             <button type="submit" class="btn btn-danger w-100">Remover Usuario</button>
@@ -204,161 +205,136 @@
   <!-- Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    const socket = io();            // Conecta al mismo host
     let adminName = '';
     let activeRoom = '';
 
-    // Guardar el nombre de administrador
-    document.getElementById('adminForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const nameInput = document.getElementById('adminName');
-      if (nameInput.value.trim() === '') {
-        alert('Por favor, ingresa tu nombre.');
-        return;
-      }
-      adminName = nameInput.value.trim();
-      alert('Nombre guardado: ' + adminName);
-      // Mostrar secciones para crear salas y listar salas
+    // -------- LISTENERS DE SOCKET.IO --------
+    socket.on('register_success', () => {
+      alert(`Registrado como ${adminName}`);
       document.getElementById('createRoomCard').style.display = 'block';
       document.getElementById('roomListCard').style.display = 'block';
       loadRooms();
     });
+    socket.on('register_error', ({ error }) => alert('Error: ' + error));
 
-    // Crear una nueva sala
-    document.getElementById('createRoomForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const roomName = document.getElementById('roomName').value.trim();
-      if (!roomName) return;
-      try {
-        const response = await fetch('/rooms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: roomName, admin: adminName })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          alert('Sala creada: ' + roomName);
-          document.getElementById('roomName').value = '';
-          loadRooms();
-        } else {
-          alert('Error: ' + result.error);
-        }
-      } catch (error) {
-        console.error('Error al crear sala:', error);
+    socket.on('rooms_list', rooms => {
+      const div = document.getElementById('roomList');
+      div.innerHTML = '';
+      if (rooms.length === 0) {
+        div.innerHTML = '<p class="text-center">No hay salas creadas.</p>';
+        return;
       }
+      rooms.forEach(r => {
+        const row = document.createElement('div');
+        row.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-2');
+        row.innerHTML = `
+          <span><strong>${r.room}</strong> (Usuarios: ${r.user_count})</span>
+          <button class="btn btn-sm btn-outline-primary" onclick="selectRoom('${r.room}')">Seleccionar</button>
+        `;
+        div.appendChild(row);
+      });
     });
 
-    // Cargar las salas existentes
-    async function loadRooms() {
-      try {
-        const response = await fetch('/rooms');
-        const rooms = await response.json();
-        const roomListDiv = document.getElementById('roomList');
-        roomListDiv.innerHTML = '';
-        if (rooms.length === 0) {
-          roomListDiv.innerHTML = '<p class="text-center">No hay salas creadas.</p>';
-          return;
-        }
-        rooms.forEach(room => {
-          const roomDiv = document.createElement('div');
-          roomDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center', 'mb-2');
-          roomDiv.innerHTML = `
-            <span><strong>${room.room}</strong> (Usuarios: ${room.user_count})</span>
-            <button class="btn btn-sm btn-outline-primary" onclick="selectRoom('${room.room}')">Seleccionar</button>
-          `;
-          roomListDiv.appendChild(roomDiv);
-        });
-      } catch (error) {
-        console.error('Error al cargar salas:', error);
-      }
-    }
+    socket.on('create_room_success', ({ room }) => {
+      alert('Sala creada: ' + room);
+      document.getElementById('roomName').value = '';
+      loadRooms();
+    });
+    socket.on('create_room_error', ({ error }) => alert('Error: ' + error));
 
-    // Seleccionar una sala para chatear y remover usuarios
-    function selectRoom(roomName) {
-      activeRoom = roomName;
-      document.getElementById('activeRoomName').textContent = roomName;
-      document.getElementById('activeRoomForRemoval').textContent = roomName;
+    socket.on('join_room_success', () => {
       document.getElementById('chatCard').style.display = 'block';
       document.getElementById('removeUserCard').style.display = 'block';
       loadMessages();
-    }
+    });
+    socket.on('join_room_error', ({ error }) => alert('Error: ' + error));
 
-    // Enviar mensaje a la sala activa
-    document.getElementById('sendMessageForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const message = document.getElementById('chatMessage').value.trim();
-      if (!message) return;
-      try {
-        const response = await fetch('/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: activeRoom, sender: adminName, message: message })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          document.getElementById('chatMessage').value = '';
-          loadMessages();
-        } else {
-          alert('Error: ' + result.error);
-        }
-      } catch (error) {
-        console.error('Error al enviar mensaje:', error);
+    socket.on('messages_history', messages => {
+      const box = document.getElementById('chatBox');
+      box.innerHTML = '';
+      if (messages.length === 0) {
+        box.innerHTML = '<p class="text-center">No hay mensajes.</p>';
+      } else {
+        messages.forEach(appendMessage);
+      }
+      box.scrollTop = box.scrollHeight;
+    });
+    socket.on('get_messages_error', ({ error }) => alert('Error: ' + error));
+
+    socket.on('new_message', msg => {
+      if (msg.room === activeRoom) {
+        appendMessage(msg);
+        const box = document.getElementById('chatBox');
+        box.scrollTop = box.scrollHeight;
       }
     });
+    socket.on('send_message_error', ({ error }) => alert('Error: ' + error));
 
-    // Cargar mensajes de la sala activa
-    async function loadMessages() {
-      try {
-        const response = await fetch('/messages?room=' + encodeURIComponent(activeRoom));
-        const messages = await response.json();
-        const chatBox = document.getElementById('chatBox');
-        chatBox.innerHTML = '';
-        if (messages.length === 0) {
-          chatBox.innerHTML = '<p class="text-center">No hay mensajes.</p>';
-          return;
-        }
-        messages.forEach(msg => {
-          const msgDiv = document.createElement('div');
-          msgDiv.classList.add('message');
-          msgDiv.innerHTML = `
-            <strong>${msg.sender}</strong>: ${msg.message}
-            <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
-          `;
-          chatBox.appendChild(msgDiv);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-      } catch (error) {
-        console.error('Error al cargar mensajes:', error);
-      }
-    }
+    socket.on('user_removed', ({ user }) => {
+      alert('Usuario removido: ' + user);
+      loadRooms();
+    });
+    socket.on('remove_user_error', ({ error }) => alert('Error: ' + error));
 
-    // Remover usuario de la sala activa
-    document.getElementById('removeUserForm').addEventListener('submit', async function (e) {
+
+    // -------- FUNCIONES UI --------
+    document.getElementById('adminForm').addEventListener('submit', e => {
       e.preventDefault();
-      const userToRemove = document.getElementById('removeUserName').value.trim();
-      if (!userToRemove) return;
-      try {
-        const response = await fetch('/rooms/remove_user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ room: activeRoom, admin: adminName, user: userToRemove })
-        });
-        const result = await response.json();
-        if (response.ok) {
-          alert('Usuario removido: ' + userToRemove);
-          document.getElementById('removeUserName').value = '';
-          loadRooms(); // Actualizar la lista de salas
-        } else {
-          alert('Error: ' + result.error);
-        }
-      } catch (error) {
-        console.error('Error al remover usuario:', error);
-      }
+      const inp = document.getElementById('adminName');
+      if (!inp.value.trim()) return alert('Por favor, ingresa tu nombre.');
+      adminName = inp.value.trim();
+      socket.emit('register', { username: adminName });
     });
 
-    // Actualizar mensajes cada 5 segundos si se ha seleccionado una sala.
-    setInterval(() => {
-      if (activeRoom) loadMessages();
-    }, 5000);
+    document.getElementById('createRoomForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const room = document.getElementById('roomName').value.trim();
+      if (!room) return;
+      socket.emit('create_room', { room, admin: adminName });
+    });
+
+    function loadRooms() {
+      socket.emit('list_rooms');
+    }
+
+    window.selectRoom = room => {
+      activeRoom = room;
+      document.getElementById('activeRoomName').textContent = room;
+      document.getElementById('activeRoomForRemoval').textContent = room;
+      socket.emit('join_room', { room, user: adminName });
+    };
+
+    document.getElementById('sendMessageForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const txt = document.getElementById('chatMessage').value.trim();
+      if (!txt) return;
+      socket.emit('send_message', { room: activeRoom, sender: adminName, message: txt });
+      document.getElementById('chatMessage').value = '';
+    });
+
+    function loadMessages() {
+      socket.emit('get_messages', { room: activeRoom });
+    }
+
+    document.getElementById('removeUserForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const u = document.getElementById('removeUserName').value.trim();
+      if (!u) return;
+      socket.emit('remove_user', { room: activeRoom, admin: adminName, user: u });
+      document.getElementById('removeUserName').value = '';
+    });
+
+    function appendMessage(msg) {
+      const box = document.getElementById('chatBox');
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.innerHTML = `
+        <strong>${msg.sender}</strong>: ${msg.message}
+        <div class="timestamp">${new Date(msg.timestamp).toLocaleString()}</div>
+      `;
+      box.appendChild(div);
+    }
   </script>
 </body>
 
